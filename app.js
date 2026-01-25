@@ -50,8 +50,14 @@ const store = MongoStore.create({
     mongoUrl: dbUrl,
     touchAfter: 24 * 3600,
     crypto: {
-        secret: process.env.SECRET,
+        // Agar environment variable nahi mila toh string use hogi, crash nahi hoga
+        secret: process.env.SECRET , 
     }
+});
+
+// Ye listener zaroor add karein, ye batayega ki error asliyat mein kya hai
+store.on("error", (err) => {
+    console.log("ERROR IN MONGO SESSION STORE", err);
 });
 
 // const store = MongoStore.create({
