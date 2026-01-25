@@ -46,37 +46,30 @@ app.use(methodOverride("_method"));
 app.engine("ejs" ,  ejsMate);
 app.use(express.static(path.join(__dirname,"public")));
 
+// 1. Store configuration update
 const store = MongoStore.create({
     mongoUrl: dbUrl,
     touchAfter: 24 * 3600,
     crypto: {
-        // Agar environment variable nahi mila toh string use hogi, crash nahi hoga
-        secret: process.env.SECRET , 
+        // Render ke environment load hone tak fallback string use hogi
+        secret: process.env.SECRET || "nosuchsecretatall" 
     }
 });
 
-// Ye listener zaroor add karein, ye batayega ki error asliyat mein kya hai
-store.on("error", (err) => {
-    console.log("ERROR IN MONGO SESSION STORE", err);
-});
-
-// const store = MongoStore.create({
-//     mongoUrl: dbUrl,
-//     touchAfter: 24 * 3600,
-// });
 store.on("error", (err) => {
     console.log("ERROR in MONGO SESSION STORE", err);
 });
 
+// 2. Session options update
 const sessionOptions = {
-    store,
-    secret: process.env.SECRET ,
+    store: store, // Yahan explicitly store define karein
+    secret: process.env.SECRET || "nosuchsecretatall",
     resave: false,
-    saveUninitialized: false, // Isse 'false' kar dein
+    saveUninitialized: false,
     cookie: {
         expires: Date.now() + 7 * 24 * 60 * 60 * 1000,
         maxAge: 7 * 24 * 60 * 60 * 1000,
-        httpOnly : true,
+        httpOnly: true,
     }
 };
 
