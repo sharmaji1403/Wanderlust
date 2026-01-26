@@ -16,14 +16,9 @@ const passport = require("passport");
 const LocalStrategy = require("passport-local");
 const User = require("./Models/user.js");
 
-
-
-
-
 const listingRouter = require("./Routes/listing.js");
 const reviewRouter = require("./Routes/review.js");
 const userRouter = require("./Routes/user.js");
-
 
 const dbUrl = process.env.ATLASDB_URL;
 
@@ -46,24 +41,19 @@ app.use(methodOverride("_method"));
 app.engine("ejs" ,  ejsMate);
 app.use(express.static(path.join(__dirname,"public")));
 
-// 1. Store configuration update
+// MongoStore Setup - Crypto hata diya hai length error fix karne ke liye
 const store = MongoStore.create({
     mongoUrl: dbUrl,
     touchAfter: 24 * 3600,
-    crypto: {
-        // Render ke environment load hone tak fallback string use hogi
-        secret: process.env.SECRET || "nosuchsecretatall" 
-    }
 });
 
 store.on("error", (err) => {
     console.log("ERROR in MONGO SESSION STORE", err);
 });
 
-// 2. Session options update
 const sessionOptions = {
-    store: store, // Yahan explicitly store define karein
-    secret: process.env.SECRET || "nosuchsecretatall",
+    store: store,
+    secret: process.env.SECRET || "mysupersecretcode",
     resave: false,
     saveUninitialized: false,
     cookie: {
@@ -72,7 +62,6 @@ const sessionOptions = {
         httpOnly: true,
     }
 };
-
 
 app.use(session(sessionOptions));
 app.use(flash());
@@ -84,33 +73,20 @@ passport.use(new LocalStrategy(User.authenticate()));
 passport.serializeUser(User.serializeUser());
 passport.deserializeUser(User.deserializeUser());
 
-// ------------------------ ROUTES ------------------------
-
-// app.use((req, res , next) => {
-//     res.locals.success = req.flash("success");
-//     res.locals.error = req.flash("error");
-//     res.locals.currentUser = req.user;
-//     next();
-// }); 
-
-
-
 app.use((req, res , next) => {
     res.locals.success = req.flash("success");
     res.locals.error = req.flash("error");
-    // Change this line to handle undefined case
     res.locals.currentUser = req.user || null; 
     next();
 });
 
 app.get("/", (req, res) => {
-    return res.redirect("/listings"); // return lagana safe hai
+    return res.redirect("/listings");
 });
-// Router use
+
 app.use("/listings" , listingRouter);
 app.use("/listings/:id/reviews" , reviewRouter);
 app.use("/", userRouter);
-
 
 app.all("*" , (req , res, next) => {
     next( new ExpressError(404 , "page not found"));
@@ -118,30 +94,14 @@ app.all("*" , (req , res, next) => {
 
 app.use((err, req, res, next) => {
     let { statusCode = 500, message = "something went wrong" } = err;
-    
-    // Agar response pehle hi ja chuka hai, toh dubara render mat karo
     if (res.headersSent) {
         return next(err);
     }
-    
     res.status(statusCode).render("listing/error.ejs", { message });
 });
 
-
-// app.get("/testListing", async (req,res) =>{
-//     let sampleListing = new Listing ({
-//         title: "My New Villa",
-//         description : "By the Beach",
-//         price: 1200,
-//         location: "Maldives",
-//         country: "Malasiya",
-//     });
-
-//    await  sampleListing.save();
-//    console.log("sample was saved");
-//    res.send("Sucessfull testing");
-// });
-
-app.listen(8080, () => {
-    console.log("server is listening to port 8080");
+// Port for Render compatibility
+const port = process.env.PORT || 8080;
+app.listen(port, () => {
+    console.log(`server is listening to port ${port}`);
 });
