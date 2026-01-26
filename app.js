@@ -51,8 +51,8 @@ const store = MongoStore.create({
     mongoUrl: dbUrl,
     touchAfter: 24 * 3600,
     crypto: {
-        // Render ke environment load hone tak fallback string use hogi
-        secret: process.env.SECRET || "nosuchsecretatall" 
+        // Agar environment variable nahi mila toh ye string error rok legi
+        secret: process.env.SECRET || "mysupersecretcode", 
     }
 });
 
@@ -142,6 +142,7 @@ app.use((err, req, res, next) => {
 //    res.send("Sucessfull testing");
 // });
 
-app.listen(8080, () => {
-    console.log("server is listening to port 8080");
+const port = 8080; // Aapka default port
+app.listen(port, () => {
+    console.log(`server is listening to port ${port}`);
 });
