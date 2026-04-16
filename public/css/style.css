@@ -119,6 +119,9 @@ body{
 /* MAP */
 
 #map {
-  height: 400px;
-  width: 111vh;
+    height: 400px; /* Ya jo bhi height aapko pasand ho */
+    width: 100%;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    margin-bottom: 2rem;
 }
